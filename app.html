@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B1036">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>빛의 정원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --ink:#1B1036;
+    --deep:#241548;
+    --card:#2B1A55;
+    --coral:#FF6B5B;
+    --coral-dk:#E8503F;
+    --pearl:#F3EEFF;
+    --mute:rgba(243,238,255,.60);
+    --line:rgba(255,255,255,.10);
+    --acc-1:#C9BBFF;
+    --acc-2:#FF8E7E;
+    --acc-3:#8FD9E8;
+    --glow-a:rgba(201,187,255,.62);
+    --tab:76px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:#0B0718;color:var(--pearl);
+    font-family:"Pretendard",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .app{
+    position:relative;display:flex;flex-direction:column;
+    height:100svh;max-width:460px;margin:0 auto;
+    background:var(--ink);overflow:hidden;
+  }
+  @media (min-width:520px){
+    .app{height:min(100svh,900px);margin-top:calc((100svh - min(100svh,900px)) / 2);
+         border-radius:26px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
+  }
+
+  /* ── 상단 바 ── */
+  .appbar{
+    flex:none;display:flex;align-items:center;justify-content:space-between;
+    padding:calc(14px + env(safe-area-inset-top)) 18px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .appbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em;}
+  .appbar .when{font-size:11px;color:var(--mute);letter-spacing:.02em;}
+
+  /* ── 화면 영역 ── */
+  .screens{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+  .screen{display:none;padding:0 16px 26px;}
+  .screen.on{display:block;animation:sfade .3s ease both;}
+  @keyframes sfade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .stitle{margin:22px 0 12px;font-size:20px;font-weight:700;letter-spacing:-.02em;}
+  .slead{margin:-6px 0 16px;font-size:13px;line-height:1.7;color:var(--mute);word-break:keep-all;}
+
+  /* ── 히어로 ── */
+  .hero{
+    position:relative;margin:14px 0 0;border-radius:20px;overflow:hidden;
+    min-height:290px;display:flex;flex-direction:column;justify-content:flex-end;
+    padding:22px 18px 20px;text-align:center;
+  }
+  .hero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .hero::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(to bottom,rgba(27,16,54,.30),rgba(27,16,54,.10) 40%,rgba(27,16,54,.82));
+  }
+  .hero > *{position:relative;z-index:2;}
+  .hero h2{
+    margin:0;font-size:29px;font-weight:700;line-height:1.28;letter-spacing:-.02em;
+    word-break:keep-all;text-wrap:balance;
+    text-shadow:0 2px 20px rgba(16,8,38,.9);
+  }
+  .hero .meta{margin:10px 0 0;font-size:12.5px;color:rgba(255,255,255,.86);}
+
+  .lamp{
+    position:absolute;border-radius:50%;z-index:1;pointer-events:none;
+    background:radial-gradient(circle,var(--glow-a) 0%,transparent 68%);
+    opacity:0;transform:translate(-50%,-50%) scale(.7);
+    animation:lamp var(--dur) ease-in-out var(--delay) infinite;
+  }
+  @keyframes lamp{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.7);}
+    16%{opacity:var(--peak);transform:translate(-50%,-50%) scale(1);}
+    54%{opacity:var(--peak);transform:translate(-50%,-50%) scale(1.05);}
+    76%{opacity:0;transform:translate(-50%,-50%) scale(.88);}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(.7);}
+  }
+
+  /* ── 큰 버튼 (엄지 기준) ── */
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;min-height:58px;padding:16px 20px;
+    border:0;border-radius:16px;cursor:pointer;
+    font-family:inherit;font-size:17px;font-weight:700;letter-spacing:-.01em;
+    background:var(--coral);color:#fff;
+    box-shadow:0 8px 24px rgba(255,107,91,.32);
+    transition:transform .12s ease,background .2s;
+  }
+  .btn:active{transform:scale(.975);background:var(--coral-dk);}
+  .btn--ghost{
+    background:transparent;color:var(--pearl);
+    border:1px solid var(--line);box-shadow:none;font-weight:600;font-size:15px;
+    min-height:52px;
+  }
+  .btn--ghost:active{background:rgba(255,255,255,.06);}
+  .price{
+    margin:10px 0 0;text-align:center;font-size:12.5px;color:rgba(255,255,255,.78);
+  }
+  .price em{font-style:normal;color:var(--mute);}
+
+  .hero-cta{margin-top:16px;}
+
+  /* ── 카드 공통 ── */
+  .card{
+    background:var(--deep);border:1px solid var(--line);
+    border-radius:18px;overflow:hidden;margin-bottom:12px;
+  }
+  .card:active{border-color:rgba(201,187,255,.4);}
+
+  /* ── 작가 ── */
+  .artist{display:flex;align-items:center;gap:13px;padding:14px;}
+  .artist img{width:66px;height:66px;border-radius:14px;object-fit:cover;flex:none;}
+  .artist b{display:block;font-size:16px;font-weight:600;}
+  .artist span{display:block;margin-top:3px;font-size:12px;color:var(--mute);}
+  .dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    margin-right:6px;vertical-align:middle;background:var(--c);
+    box-shadow:0 0 8px 1px var(--c);
+  }
+
+  /* ── 갤러리 ── */
+  .work{width:100%;padding:0;border:0;background:none;text-align:left;color:inherit;font:inherit;cursor:pointer;}
+  .work img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;}
+  .work .cap{padding:14px 16px 16px;}
+  .work .cap b{display:block;font-size:17px;font-weight:600;}
+  .work .cap span{display:block;margin-top:4px;font-size:12.5px;color:var(--mute);}
+  .work .cap i{
+    display:inline-block;margin-top:9px;font-style:normal;
+    font-size:12px;color:var(--acc-1);
+  }
+
+  /* ── 정보 카드 ── */
+  .icard{padding:16px;}
+  .ihead{display:flex;align-items:center;gap:10px;padding-bottom:11px;margin-bottom:5px;border-bottom:1px solid var(--line);}
+  .ihead svg{width:19px;height:19px;flex:none;color:var(--c);}
+  .ihead h3{margin:0;font-size:15px;font-weight:600;}
+  .irow{display:flex;justify-content:space-between;gap:14px;padding:9px 0;font-size:13.5px;}
+  .irow + .irow{border-top:1px solid rgba(255,255,255,.06);}
+  .irow dt{color:var(--mute);flex:none;}
+  .irow dd{margin:0;text-align:right;word-break:keep-all;}
+  .irow dd small{display:block;color:var(--mute);font-size:11.5px;margin-top:2px;}
+  dl{margin:0;}
+
+  /* ── 지도 ── */
+  .map{
+    position:relative;height:170px;display:grid;place-items:center;text-align:center;
+    background:radial-gradient(60% 90% at 50% 55%,rgba(78,63,176,.42),transparent 70%),
+               linear-gradient(160deg,#241548,#160C30);
+  }
+  .map::before{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+    background-size:38px 38px;
+  }
+  .pin{position:relative;z-index:1;}
+  .pin i{display:block;width:14px;height:14px;margin:0 auto;border-radius:50%;
+         background:var(--coral);box-shadow:0 0 16px 4px rgba(255,107,91,.8);}
+  .pin em{position:absolute;left:50%;top:7px;width:14px;height:14px;margin:-7px 0 0 -7px;
+          border-radius:50%;border:1.5px solid rgba(255,107,91,.6);
+          animation:ping 2.6s ease-out infinite;}
+  .pin em:nth-of-type(2){animation-delay:1.3s;}
+  @keyframes ping{from{transform:scale(1);opacity:.9;}to{transform:scale(4.4);opacity:0;}}
+  .pin p{margin:13px 0 0;font-size:14px;font-weight:600;}
+  .pin span{display:block;margin-top:3px;font-size:11.5px;color:var(--mute);}
+  .ways{display:flex;flex-direction:column;gap:8px;padding:14px;}
+
+  /* ── FAQ ── */
+  .qa{background:var(--deep);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden;}
+  .qa[open]{border-color:rgba(201,187,255,.36);}
+  .qa summary{
+    display:flex;align-items:center;gap:12px;list-style:none;cursor:pointer;
+    padding:16px;font-size:14px;font-weight:500;min-height:54px;word-break:keep-all;
+  }
+  .qa summary::-webkit-details-marker{display:none;}
+  .qa summary::after{
+    content:"";flex:none;margin-left:auto;width:8px;height:8px;
+    border-right:1.6px solid var(--mute);border-bottom:1.6px solid var(--mute);
+    transform:rotate(45deg) translate(-2px,-2px);transition:transform .28s;
+  }
+  .qa[open] summary::after{transform:rotate(225deg) translate(-2px,-2px);}
+  .qa p{margin:0;padding:0 16px 16px;font-size:13px;line-height:1.8;color:rgba(255,255,255,.78);word-break:keep-all;}
+
+  /* ── 예매 화면 ── */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:none;min-width:62px;min-height:66px;padding:10px 12px;
+    border-radius:14px;border:1px solid var(--line);background:var(--deep);
+    color:var(--pearl);font-family:inherit;cursor:pointer;text-align:center;
+    transition:border-color .2s,background .2s,transform .12s;
+  }
+  .chip b{display:block;font-size:17px;font-weight:700;}
+  .chip span{display:block;margin-top:3px;font-size:11px;color:var(--mute);}
+  .chip:active{transform:scale(.96);}
+  .chip.sel{background:var(--coral);border-color:var(--coral);color:#fff;}
+  .chip.sel span{color:rgba(255,255,255,.85);}
+  .chip.full{opacity:.36;}
+
+  .times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .time{
+    min-height:54px;border-radius:13px;border:1px solid var(--line);
+    background:var(--deep);color:var(--pearl);font-family:inherit;
+    font-size:15px;font-weight:600;cursor:pointer;
+    transition:border-color .2s,background .2s,transform .12s;
+  }
+  .time small{display:block;font-size:10.5px;font-weight:400;color:var(--mute);margin-top:2px;}
+  .time:active{transform:scale(.96);}
+  .time.sel{background:var(--coral);border-color:var(--coral);color:#fff;}
+  .time.sel small{color:rgba(255,255,255,.85);}
+  .time[disabled]{opacity:.32;cursor:default;}
+
+  .qty{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;}
+  .qty + .qty{border-top:1px solid rgba(255,255,255,.06);}
+  .qty b{display:block;font-size:15px;font-weight:600;}
+  .qty span{display:block;margin-top:2px;font-size:12px;color:var(--mute);}
+  .stepper{display:flex;align-items:center;gap:6px;}
+  .step{
+    width:44px;height:44px;border-radius:12px;flex:none;
+    border:1px solid var(--line);background:var(--deep);color:var(--pearl);
+    font-size:21px;line-height:1;cursor:pointer;font-family:inherit;
+  }
+  .step:active{background:rgba(255,255,255,.08);}
+  .step[disabled]{opacity:.3;cursor:default;}
+  .num{min-width:32px;text-align:center;font-size:17px;font-weight:700;}
+
+  .total{
+    display:flex;align-items:baseline;justify-content:space-between;
+    padding:16px;border-top:1px solid var(--line);
+  }
+  .total span{font-size:13px;color:var(--mute);}
+  .total b{font-size:23px;font-weight:700;letter-spacing:-.02em;}
+
+  /* ── 하단 탭 ── */
+  .tabbar{
+    flex:none;display:grid;grid-template-columns:repeat(4,1fr);
+    background:rgba(20,11,42,.94);
+    backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .tab{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-height:var(--tab);border:0;background:none;cursor:pointer;
+    font-family:inherit;font-size:11px;font-weight:500;color:var(--mute);
+    transition:color .22s;position:relative;
+  }
+  .tab svg{width:23px;height:23px;}
+  .tab:active{background:rgba(255,255,255,.05);}
+  .tab[aria-selected="true"]{color:var(--pearl);}
+  .tab[aria-selected="true"] svg{color:var(--coral);}
+  .tab::before{
+    content:"";position:absolute;top:8px;left:50%;margin-left:-2.5px;
+    width:5px;height:5px;border-radius:50%;background:var(--coral);
+    opacity:0;transform:scale(.3);
+    transition:opacity .3s,transform .3s cubic-bezier(.2,1.5,.4,1);
+  }
+  .tab[aria-selected="true"]::before{
+    opacity:1;transform:scale(1);
+    animation:tabpulse 2.8s ease-in-out infinite;
+  }
+  @keyframes tabpulse{
+    0%,100%{box-shadow:0 0 6px 1.5px rgba(255,107,91,.55);}
+    50%{box-shadow:0 0 13px 4px rgba(255,107,91,1);}
+  }
+
+  /* ── 상세 시트 ── */
+  .sheet{
+    position:absolute;inset:0;z-index:70;display:none;
+    align-items:flex-end;background:rgba(8,4,20,.72);
+  }
+  .sheet.on{display:flex;animation:sfade2 .22s ease both;}
+  @keyframes sfade2{from{opacity:0;}to{opacity:1;}}
+  .sheet__box{
+    width:100%;max-height:88%;overflow-y:auto;
+    background:var(--deep);border-radius:22px 22px 0 0;
+    border-top:1px solid rgba(255,255,255,.14);
+    animation:slideup .3s cubic-bezier(.2,.8,.3,1) both;
+    padding-bottom:calc(18px + env(safe-area-inset-bottom));
+  }
+  @keyframes slideup{from{transform:translateY(100%);}to{transform:none;}}
+  .grab{width:38px;height:4px;border-radius:99px;background:rgba(255,255,255,.28);margin:10px auto 4px;}
+  .sheet__box img{width:100%;display:block;}
+  .sheet__body{padding:18px;}
+  .sheet__body h3{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em;}
+  .sheet__by{margin:6px 0 0;font-size:12.5px;color:var(--mute);}
+  .sheet__txt{margin:14px 0 0;font-size:13.5px;line-height:1.85;color:rgba(255,255,255,.82);word-break:keep-all;}
+
+  .foot{padding:22px 0 6px;text-align:center;font-size:11px;color:var(--mute);}
+
+
+  /* ══ 반응형 ══════════════════════════════════
+     좁은 화면: 앱 (하단 탭 · 한 열)
+     768px~   : 상단 탭 · 두 열
+     1080px~  : 세 열, 넓은 히어로
+  ═══════════════════════════════════════════ */
+  .row3{display:grid;gap:12px;}
+  .row3 .card{margin-bottom:0;}
+
+  @media (min-width:768px){
+    .app{
+      max-width:none;height:100svh;margin-top:0;
+      border-radius:0;box-shadow:none;
+      display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto 1fr;
+    }
+    .appbar{grid-area:1 / 1 / 2 / 2;border-bottom:0;padding:16px 0 16px 28px;gap:14px;}
+    .appbar h1{font-size:19px;}
+
+    /* 하단 탭 → 상단 가로 메뉴 */
+    .tabbar{
+      grid-area:1 / 2 / 2 / 3;justify-self:end;align-self:center;
+      display:flex;gap:4px;padding:0 24px 0 0;
+      background:none;backdrop-filter:none;border-top:0;
+    }
+    .tab{
+      flex-direction:row;gap:8px;min-height:46px;padding:0 15px;
+      border-radius:11px;font-size:14px;
+    }
+    .tab svg{width:19px;height:19px;}
+    .tab::before{top:auto;bottom:6px;}
+    .tab:hover{color:var(--pearl);background:rgba(255,255,255,.05);}
+
+    .screens{grid-area:2 / 1 / 3 / 3;border-top:1px solid var(--line);}
+    .screen{max-width:1060px;margin:0 auto;padding:0 28px 48px;}
+
+    .hero{min-height:400px;margin-top:22px;padding:34px 30px 32px;}
+    .hero h2{font-size:44px;}
+    .hero .meta{font-size:14px;margin-top:14px;}
+
+    /* 큰 화면에서 버튼이 가로로 늘어지지 않게 */
+    .hero-cta{max-width:360px;margin:22px auto 0;}
+    #s-gallery > .btn,#s-home > .btn--ghost{max-width:360px;margin-left:auto;margin-right:auto;}
+
+    .stitle{font-size:24px;margin:34px 0 12px;}
+    .slead{font-size:14px;margin-bottom:20px;}
+
+    .row3{grid-template-columns:repeat(2,1fr);gap:14px;}
+    .artist{padding:16px;}
+    .artist img{width:76px;height:76px;}
+
+    .qa{max-width:760px;margin-left:auto;margin-right:auto;}
+    .map{height:230px;}
+    .ways{flex-direction:row;}
+
+    /* 예매 화면 */
+    #s-book > *{max-width:640px;margin-left:auto;margin-right:auto;}
+    .times{grid-template-columns:repeat(5,1fr);}
+    #s-book .card,#s-book .chips{max-width:640px;margin-left:auto;margin-right:auto;}
+
+    /* 상세는 시트 대신 가운데 모달 */
+    .sheet{align-items:center;justify-content:center;padding:32px;}
+    .sheet__box{
+      max-width:560px;max-height:82%;border-radius:22px;
+      border:1px solid rgba(255,255,255,.14);padding-bottom:0;
+      animation:popin .28s cubic-bezier(.2,.8,.3,1) both;
+    }
+    @keyframes popin{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+    .grab{display:none;}
+  }
+
+  @media (min-width:1080px){
+    .row3{grid-template-columns:repeat(3,1fr);gap:16px;}
+    .hero{min-height:460px;}
+    .hero h2{font-size:56px;}
+    .screen{padding-bottom:64px;}
+    .times{grid-template-columns:repeat(9,1fr);}
+    .time{font-size:13.5px;}
+  }
+
+  @media (min-width:768px) and (prefers-reduced-motion:reduce){
+    .sheet__box{animation:none;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .screen.on,.sheet.on,.sheet__box{animation:none;}
+    .lamp{animation:none;opacity:calc(var(--peak) * .5);transform:translate(-50%,-50%) scale(1);}
+    .pin em{animation:none;opacity:.3;}
+    .tab[aria-selected="true"]::before{animation:none;box-shadow:0 0 9px 2px rgba(255,107,91,.8);}
+    .btn,.chip,.time,.step{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="appbar">
+    <h1>빛의 정원</h1>
+    <span class="when">2026. 9. 4 — 11. 29</span>
+  </header>
+
+  <main class="screens" id="screens">
+
+    <!-- ── 홈 ── -->
+    <section class="screen on" id="s-home">
+      <div class="hero">
+        <img class="bg" src="hero.webp" alt="">
+        <span class="lamp" style="left:14%;top:24%;width:96px;height:96px;--dur:8s;--delay:0s;--peak:.85"></span>
+        <span class="lamp" style="left:82%;top:18%;width:80px;height:80px;--dur:7s;--delay:1.6s;--peak:.7"></span>
+        <span class="lamp" style="left:60%;top:62%;width:70px;height:70px;--dur:9s;--delay:3.4s;--peak:.6"></span>
+        <h2>빛으로 그린<br>정원을 거닐다</h2>
+        <p class="meta">광주 미디어아트 플랫폼 · 40분 소요</p>
+      </div>
+
+      <div class="hero-cta">
+        <button class="btn" data-go="book">예매하기</button>
+        <p class="price">성인 22,000원 · 청소년 16,000원 <em>· 8세 미만 무료</em></p>
+      </div>
+
+      <h2 class="stitle">참여 작가</h2>
+      <p class="slead">광주에서 활동하는 세 명의 작가가 빛과 소리로 사계절의 정원을 가꿨습니다.</p>
+
+      <div class="row3">
+      <div class="card"><div class="artist">
+        <img src="work1.webp" alt="">
+        <div><b><span class="dot" style="--c:var(--acc-1)"></span>서지우</b>
+        <span>라이트 인스톨레이션 · 흐르는 빛</span></div>
+      </div></div>
+
+      <div class="card"><div class="artist">
+        <img src="work2.webp" alt="">
+        <div><b><span class="dot" style="--c:var(--acc-2)"></span>한도현</b>
+        <span>사운드 아트 · 밤의 산책</span></div>
+      </div></div>
+
+      <div class="card"><div class="artist">
+        <img src="work3.webp" alt="">
+        <div><b><span class="dot" style="--c:var(--acc-3)"></span>문세린</b>
+        <span>인터랙티브 미디어 · 파동의 숲</span></div>
+      </div></div>
+      </div>
+
+      <button class="btn btn--ghost" data-go="gallery" style="margin-top:4px">작품 둘러보기</button>
+      <p class="foot">© 2026 빛의 정원</p>
+    </section>
+
+    <!-- ── 갤러리 ── -->
+    <section class="screen" id="s-gallery">
+      <h2 class="stitle">작품 갤러리</h2>
+      <p class="slead">세 개의 방에 놓인 작품입니다. 눌러서 재료와 작업 노트를 확인하세요.</p>
+
+      <div class="row3">
+      <div class="card"><button class="work"
+        data-title="흐르는 빛" data-by="서지우 · 2026"
+        data-med="바닥 압력 센서, LED 스트립 320m, 커스텀 소프트웨어" data-img="work1.webp"
+        data-text="바닥에 깔린 센서가 관람객의 걸음을 읽고, 지나간 자리마다 빛의 씨앗을 남깁니다. 아무도 없는 방은 완전히 어둡고, 사람이 많을수록 밝아집니다. 관람객이 곧 조명인 셈입니다.">
+        <img src="work1.webp" alt="작품 흐르는 빛">
+        <span class="cap"><b>흐르는 빛</b><span>서지우 · 2026</span><i>자세히 보기 →</i></span>
+      </button></div>
+
+      <div class="card"><button class="work"
+        data-title="밤의 산책" data-by="한도현 · 2026"
+        data-med="실시간 사운드 입력, 4채널 프로젝션, 지향성 마이크" data-img="work2.webp"
+        data-text="전시장 바깥의 소리를 실시간으로 받아 빛의 파장으로 바꿉니다. 비 오는 날과 맑은 날의 방이 서로 다른 색을 냅니다. 같은 작품을 두 번 보아도 같은 장면은 나오지 않습니다.">
+        <img src="work2.webp" alt="작품 밤의 산책">
+        <span class="cap"><b>밤의 산책</b><span>한도현 · 2026</span><i>자세히 보기 →</i></span>
+      </button></div>
+
+      <div class="card"><button class="work"
+        data-title="파동의 숲" data-by="문세린 · 2026"
+        data-med="8m 라이트 폴 24점, 마이크 어레이, 진동 모터" data-img="work3.webp"
+        data-text="천장까지 8m 높이의 빛줄기가 관람객의 목소리에 흔들립니다. 마지막 방에서는 그날 다녀간 모든 걸음이 한 번에 피어납니다. 폐관 시각에 가까울수록 정원은 무성해집니다.">
+        <img src="work3.webp" alt="작품 파동의 숲">
+        <span class="cap"><b>파동의 숲</b><span>문세린 · 2026</span><i>자세히 보기 →</i></span>
+      </button></div>
+      </div>
+
+      <button class="btn" data-go="book" style="margin-top:6px">예매하기</button>
+      <p class="foot">© 2026 빛의 정원</p>
+    </section>
+
+    <!-- ── 안내 ── -->
+    <section class="screen" id="s-info">
+      <h2 class="stitle">관람 안내</h2>
+      <p class="slead">회차제로 운영합니다. 잔여석이 있으면 현장 구매도 가능합니다.</p>
+
+      <div class="row3">
+      <div class="card icard" style="--c:var(--acc-1)">
+        <div class="ihead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/></svg><h3>기간과 시간</h3></div>
+        <dl>
+          <div class="irow"><dt>전시 기간</dt><dd>9. 4 — 11. 29</dd></div>
+          <div class="irow"><dt>운영 시간</dt><dd>10:00 — 20:00</dd></div>
+          <div class="irow"><dt>마지막 입장</dt><dd>19:20</dd></div>
+          <div class="irow"><dt>휴관일</dt><dd>매주 월요일<small>추석 당일 휴관</small></dd></div>
+        </dl>
+      </div>
+
+      <div class="card icard" style="--c:var(--acc-2)">
+        <div class="ihead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5V6.5h18v2a2.4 2.4 0 000 4.8v4.2H3v-4.2a2.4 2.4 0 000-4.8z"/><path d="M13 7v2M13 12v2M13 16v1.5" stroke-dasharray="1.6 2.4"/></svg><h3>관람 요금</h3></div>
+        <dl>
+          <div class="irow"><dt>성인</dt><dd>22,000원</dd></div>
+          <div class="irow"><dt>청소년</dt><dd>16,000원<small>13—18세</small></dd></div>
+          <div class="irow"><dt>8세 미만</dt><dd>무료<small>보호자 동반</small></dd></div>
+          <div class="irow"><dt>단체</dt><dd>20인 이상 15% 할인</dd></div>
+        </dl>
+      </div>
+
+      <div class="card icard" style="--c:var(--acc-3)">
+        <div class="ihead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.8v.6"/></svg><h3>관람 정보</h3></div>
+        <dl>
+          <div class="irow"><dt>소요 시간</dt><dd>약 40분</dd></div>
+          <div class="irow"><dt>회차 간격</dt><dd>30분<small>회차당 60명</small></dd></div>
+          <div class="irow"><dt>사진 촬영</dt><dd>가능<small>플래시 · 삼각대 불가</small></dd></div>
+          <div class="irow"><dt>문의</dt><dd>062-000-0000</dd></div>
+        </dl>
+      </div>
+      </div>
+
+      <div class="card">
+        <div class="map">
+          <div class="pin">
+            <em></em><em></em><i></i>
+            <p>광주 미디어아트 플랫폼</p>
+            <span>1호선 금남로4가역 3번 출구 도보 7분</span>
+          </div>
+        </div>
+        <div class="ways">
+          <a class="btn btn--ghost" href="https://map.naver.com/p/search/광주 미디어아트 플랫폼" target="_blank" rel="noopener noreferrer">네이버 지도로 길찾기</a>
+          <a class="btn btn--ghost" href="https://map.kakao.com/?q=광주 미디어아트 플랫폼" target="_blank" rel="noopener noreferrer">카카오맵으로 길찾기</a>
+        </div>
+      </div>
+
+      <h2 class="stitle">자주 묻는 질문</h2>
+
+      <details class="qa"><summary>예매 없이 현장에서 볼 수 있나요?</summary>
+        <p>회차당 60명으로 인원을 제한하고 있어 주말과 공휴일은 대부분 매진됩니다. 평일 오전은 여유가 있는 편이지만, 헛걸음을 피하려면 예매를 권합니다.</p></details>
+
+      <details class="qa"><summary>사진이나 영상 촬영이 가능한가요?</summary>
+        <p>개인 소장 목적의 촬영은 자유롭게 하실 수 있습니다. 다만 작품이 빛으로 이루어져 있어 플래시를 쓰면 다른 관람객의 감상을 방해합니다. 삼각대와 셀카봉은 안전상 반입이 제한됩니다.</p></details>
+
+      <details class="qa"><summary>중간에 나갔다가 다시 들어올 수 있나요?</summary>
+        <p>재입장은 어렵습니다. 세 개의 방을 순서대로 지나는 구조라 중간에 나오면 흐름이 끊기고, 다음 회차 관람객과 동선이 겹칩니다. 입장 전 화장실을 이용해 주세요.</p></details>
+
+      <details class="qa"><summary>유모차나 휠체어로 관람할 수 있나요?</summary>
+        <p>전 구간이 평지이고 턱이 없어 휠체어와 유모차 모두 이동할 수 있습니다. 입구에서 대여도 가능합니다. 다만 조도가 매우 낮아 바닥이 잘 보이지 않으니 천천히 이동해 주세요.</p></details>
+
+      <details class="qa"><summary>예매를 취소하거나 날짜를 바꿀 수 있나요?</summary>
+        <p>관람일 하루 전까지는 예매처에서 직접 취소하거나 변경하실 수 있습니다. 관람 당일 취소는 수수료가 발생하며, 회차 시작 이후에는 환불이 어렵습니다.</p></details>
+
+      <p class="foot">© 2026 빛의 정원</p>
+    </section>
+
+    <!-- ── 예매 ── -->
+    <section class="screen" id="s-book">
+      <h2 class="stitle">예매하기</h2>
+      <p class="slead">관람일과 회차를 고르면 예매처로 이동합니다.</p>
+
+      <h3 style="font-size:14px;margin:18px 0 10px">관람일</h3>
+      <div class="chips" id="days"></div>
+
+      <h3 style="font-size:14px;margin:20px 0 10px">회차</h3>
+      <div class="times" id="times"></div>
+
+      <h3 style="font-size:14px;margin:22px 0 10px">인원</h3>
+      <div class="card">
+        <div class="qty">
+          <div><b>성인</b><span>22,000원</span></div>
+          <div class="stepper">
+            <button class="step" data-q="adult" data-d="-1" aria-label="성인 줄이기">−</button>
+            <span class="num" id="nAdult">1</span>
+            <button class="step" data-q="adult" data-d="1" aria-label="성인 늘리기">+</button>
+          </div>
+        </div>
+        <div class="qty">
+          <div><b>청소년</b><span>16,000원</span></div>
+          <div class="stepper">
+            <button class="step" data-q="teen" data-d="-1" aria-label="청소년 줄이기">−</button>
+            <span class="num" id="nTeen">0</span>
+            <button class="step" data-q="teen" data-d="1" aria-label="청소년 늘리기">+</button>
+          </div>
+        </div>
+        <div class="total"><span>결제 예정 금액</span><b id="sum">22,000원</b></div>
+      </div>
+
+      <button class="btn" id="goPay" style="margin-top:14px">네이버 예약으로 예매하기</button>
+      <p class="price" id="picked">9월 4일 · 회차를 골라주세요</p>
+      <p class="foot">© 2026 빛의 정원</p>
+    </section>
+
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="주요 메뉴">
+    <button class="tab" role="tab" data-go="home" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.6L12 4l8 6.6V20H4z"/><path d="M9.6 20v-5.4h4.8V20"/></svg><span>홈</span></button>
+    <button class="tab" role="tab" data-go="gallery" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></svg><span>갤러리</span></button>
+    <button class="tab" role="tab" data-go="info" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.8v.6"/></svg><span>안내</span></button>
+    <button class="tab" role="tab" data-go="book" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5V6.5h18v2a2.4 2.4 0 000 4.8v4.2H3v-4.2a2.4 2.4 0 000-4.8z"/><path d="M13 7v2M13 12v2M13 16v1.5" stroke-dasharray="1.6 2.4"/></svg><span>예매</span></button>
+  </nav>
+
+  <div class="sheet" id="sheet">
+    <div class="sheet__box">
+      <div class="grab"></div>
+      <img id="shImg" src="" alt="">
+      <div class="sheet__body">
+        <h3 id="shTitle"></h3>
+        <p class="sheet__by" id="shBy"></p>
+        <p class="sheet__txt" id="shTxt"></p>
+        <p class="sheet__by" id="shMed" style="margin-top:14px"></p>
+        <button class="btn btn--ghost" id="shClose" style="margin-top:18px">닫기</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var screens = document.getElementById('screens');
+
+  /* ── 탭 전환 ── */
+  function go(id){
+    document.querySelectorAll('.screen').forEach(function(s){
+      s.classList.toggle('on', s.id === 's' + '-' + id);
+    });
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.setAttribute('aria-selected', String(t.dataset.go === id));
+    });
+    screens.scrollTop = 0;
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-go]');
+    if (b) go(b.dataset.go);
+  });
+
+  /* ── 작품 상세 시트 ── */
+  var sheet = document.getElementById('sheet');
+  document.querySelectorAll('.work').forEach(function(w){
+    w.addEventListener('click', function(){
+      document.getElementById('shImg').src = w.dataset.img;
+      document.getElementById('shImg').alt = '작품 ' + w.dataset.title;
+      document.getElementById('shTitle').textContent = w.dataset.title;
+      document.getElementById('shBy').textContent = w.dataset.by;
+      document.getElementById('shTxt').textContent = w.dataset.text;
+      document.getElementById('shMed').textContent = '재료 · ' + w.dataset.med;
+      sheet.classList.add('on');
+    });
+  });
+  function closeSheet(){ sheet.classList.remove('on'); }
+  document.getElementById('shClose').addEventListener('click', closeSheet);
+  sheet.addEventListener('click', function(e){ if (e.target === sheet) closeSheet(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeSheet();
+  });
+
+  /* ── 예매: 날짜 · 회차 · 인원 ── */
+  var DOW = ['일','월','화','수','목','금','토'];
+  var days = document.getElementById('days');
+  var base = new Date(2026, 8, 4);
+  var picked = { d:null, t:null, adult:1, teen:0 };
+
+  for (var i = 0; i < 10; i++){
+    var dt = new Date(base.getTime() + i * 86400000);
+    var closed = dt.getDay() === 1;               /* 월요일 휴관 */
+    var b = document.createElement('button');
+    b.className = 'chip' + (closed ? ' full' : '') + (i === 0 ? ' sel' : '');
+    b.innerHTML = '<b>' + dt.getDate() + '</b><span>' + (closed ? '휴관' : DOW[dt.getDay()]) + '</span>';
+    if (closed) b.disabled = true;
+    else b.addEventListener('click', pickDay(dt, b));
+    days.appendChild(b);
+    if (i === 0) picked.d = dt;
+  }
+  function pickDay(dt, el){
+    return function(){
+      days.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('sel'); });
+      el.classList.add('sel');
+      picked.d = dt;
+      label();
+    };
+  }
+
+  var times = document.getElementById('times');
+  [['10:00',42],['11:00',18],['13:00',0],['14:00',31],['15:00',7],
+   ['16:00',24],['17:00',39],['18:00',12],['19:00',48]].forEach(function(t){
+    var b = document.createElement('button');
+    b.className = 'time';
+    b.innerHTML = t[0] + '<small>' + (t[1] ? '잔여 ' + t[1] + '석' : '매진') + '</small>';
+    if (!t[1]) b.disabled = true;
+    else b.addEventListener('click', function(){
+      times.querySelectorAll('.time').forEach(function(c){ c.classList.remove('sel'); });
+      b.classList.add('sel');
+      picked.t = t[0];
+      label();
+    });
+    times.appendChild(b);
+  });
+
+  document.querySelectorAll('.step').forEach(function(s){
+    s.addEventListener('click', function(){
+      var k = s.dataset.q, d = parseInt(s.dataset.d, 10);
+      var next = picked[k] + d;
+      if (next < 0 || next > 10) return;
+      if (k === 'adult' && next === 0 && picked.teen === 0) return;
+      picked[k] = next;
+      document.getElementById(k === 'adult' ? 'nAdult' : 'nTeen').textContent = next;
+      label();
+    });
+  });
+
+  function label(){
+    var sum = picked.adult * 22000 + picked.teen * 16000;
+    document.getElementById('sum').textContent = sum.toLocaleString('ko-KR') + '원';
+    var d = picked.d;
+    document.getElementById('picked').textContent =
+      (d.getMonth() + 1) + '월 ' + d.getDate() + '일 · ' + (picked.t ? picked.t + ' 회차' : '회차를 골라주세요');
+    document.querySelectorAll('.step').forEach(function(s){
+      var k = s.dataset.q, d2 = parseInt(s.dataset.d, 10);
+      s.disabled = (d2 < 0 && picked[k] === 0) || (d2 > 0 && picked[k] === 10);
+    });
+  }
+  label();
+
+  document.getElementById('goPay').addEventListener('click', function(){
+    if (!picked.t){ go('book'); document.getElementById('picked').textContent = '회차를 먼저 골라주세요'; return; }
+    /* 실제 예매처 주소로 교체하세요 */
+    window.open('https://example.com/booking', '_blank', 'noopener');
+  });
+})();
+</script>
+</body>
+</html>
