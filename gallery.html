@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1B1036">
+<title>작품 갤러리 — 빛의 정원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="brand.css">
+</head>
+<body>
+
+<header class="nav">
+  <a class="logo" href="index.html">빛의 정원</a>
+  <nav class="menu" aria-label="주요 메뉴">
+    <a href="index.html">홈</a>
+    <a href="artists.html">작가</a>
+    <a href="gallery.html" aria-current="page">갤러리</a>
+    <a href="info.html">관람안내</a>
+  </nav>
+</header>
+
+<main class="page">
+  <div class="page__head">
+    <h1>작품 갤러리</h1>
+    <p>세 개의 방에 놓인 작품들입니다. 이미지를 누르면 재료와 작업 노트를 볼 수 있습니다.</p>
+  </div>
+
+  <ul class="gallery">
+    <li>
+      <button class="tile" type="button"
+        data-title="흐르는 빛" data-artist="서지우"
+        data-year="2026" data-medium="바닥 압력 센서, LED 스트립 320m, 커스텀 소프트웨어"
+        data-img="work1.webp"
+        data-text="바닥에 깔린 센서가 관람객의 걸음을 읽고, 지나간 자리마다 빛의 씨앗을 남깁니다. 아무도 없는 방은 완전히 어둡고, 사람이 많을수록 밝아집니다. 관람객이 곧 조명인 셈입니다.">
+        <span class="tile__img"><img src="work1.webp" alt="작품 흐르는 빛"></span>
+        <span class="tile__cap"><b>흐르는 빛</b><span>서지우 · 2026</span></span>
+      </button>
+    </li>
+    <li>
+      <button class="tile" type="button"
+        data-title="밤의 산책" data-artist="한도현"
+        data-year="2026" data-medium="실시간 사운드 입력, 4채널 프로젝션, 지향성 마이크"
+        data-img="work2.webp"
+        data-text="전시장 바깥의 소리를 실시간으로 받아 빛의 파장으로 바꿉니다. 비 오는 날과 맑은 날의 방이 서로 다른 색을 냅니다. 같은 작품을 두 번 보아도 같은 장면은 나오지 않습니다.">
+        <span class="tile__img"><img src="work2.webp" alt="작품 밤의 산책"></span>
+        <span class="tile__cap"><b>밤의 산책</b><span>한도현 · 2026</span></span>
+      </button>
+    </li>
+    <li>
+      <button class="tile" type="button"
+        data-title="파동의 숲" data-artist="문세린"
+        data-year="2026" data-medium="8m 라이트 폴 24점, 마이크 어레이, 진동 모터"
+        data-img="work3.webp"
+        data-text="천장까지 8m 높이의 빛줄기가 관람객의 목소리에 흔들립니다. 마지막 방에서는 그날 다녀간 모든 걸음이 한 번에 피어납니다. 폐관 시각에 가까울수록 정원은 무성해집니다.">
+        <span class="tile__img"><img src="work3.webp" alt="작품 파동의 숲"></span>
+        <span class="tile__cap"><b>파동의 숲</b><span>문세린 · 2026</span></span>
+      </button>
+    </li>
+  </ul>
+
+  <section class="closer">
+    <p>화면으로는 절반만 보입니다.</p>
+    <a class="book" href="#">예매하기</a>
+    <p class="price">성인 22,000원 · 청소년 16,000원 <em>· 8세 미만 무료</em></p>
+  </section>
+</main>
+
+<footer class="foot">© 2026 빛의 정원 · 광주 미디어아트 플랫폼</footer>
+
+<div class="lumi lumi--fixed" id="lumi">
+  <span class="bubble" id="bubble" aria-hidden="true"></span>
+  <span class="lumi__halo" aria-hidden="true"></span>
+  <img class="lumi__img" src="lumi.webp" alt="전시 마스코트 루미">
+</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+  <div class="viewer__box">
+    <button class="viewer__close" id="vClose" type="button" aria-label="닫기">✕</button>
+    <img id="vImg" src="" alt="">
+    <div class="viewer__body">
+      <h2 id="vTitle"></h2>
+      <p class="viewer__by" id="vBy"></p>
+      <p class="viewer__txt" id="vText"></p>
+      <p class="viewer__by" id="vMedium"></p>
+    </div>
+  </div>
+</div>
+
+<script src="brand.js"></script>
+<script>
+(function(){
+  var tiles  = document.querySelectorAll('.tile');
+  var lumi   = document.getElementById('lumi');
+  var bubble = document.getElementById('bubble');
+  var viewer = document.getElementById('viewer');
+  var vImg   = document.getElementById('vImg');
+  var vTitle = document.getElementById('vTitle');
+  var vBy    = document.getElementById('vBy');
+  var vText  = document.getElementById('vText');
+  var vMed   = document.getElementById('vMedium');
+  var vClose = document.getElementById('vClose');
+  var last   = null;
+
+  /* 작품에 마우스를 올리면 루미가 작가 이름을 말한다 */
+  function say(name){
+    if (!lumi || !bubble) return;
+    bubble.textContent = name + ' 작가';
+    lumi.classList.add('talking');
+  }
+  function hush(){ if (lumi) lumi.classList.remove('talking'); }
+
+  /* 상세 보기 */
+  function open(t){
+    last = t;
+    vImg.src = t.dataset.img;
+    vImg.alt = '작품 ' + t.dataset.title;
+    vTitle.textContent = t.dataset.title;
+    vBy.textContent = t.dataset.artist + ' · ' + t.dataset.year;
+    vText.textContent = t.dataset.text;
+    vMed.textContent = '재료 · ' + t.dataset.medium;
+    viewer.classList.add('on');
+    document.body.style.overflow = 'hidden';
+    vClose.focus();
+  }
+  function close(){
+    viewer.classList.remove('on');
+    document.body.style.overflow = '';
+    if (last) last.focus();
+  }
+
+  tiles.forEach(function(t){
+    t.addEventListener('mouseenter', function(){ say(t.dataset.artist); });
+    t.addEventListener('mouseleave', hush);
+    t.addEventListener('focus', function(){ say(t.dataset.artist); });
+    t.addEventListener('blur', hush);
+    t.addEventListener('click', function(){ open(t); });
+  });
+
+  vClose.addEventListener('click', close);
+  viewer.addEventListener('click', function(e){ if (e.target === viewer) close(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && viewer.classList.contains('on')) close();
+  });
+})();
+</script>
+</body>
+</html>
